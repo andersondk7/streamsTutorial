@@ -112,8 +112,8 @@ class IntegerEmitter4(max: Int) {
       */
     val start = System.currentTimeMillis()
     source
-      .throttle(1, 100.millisecond, 1, ThrottleMode.shaping)
       .scan(BigInt(1))( (acc, next) => acc * next)
+      .throttle(1, 100.millisecond, 1, ThrottleMode.shaping)
       .zipWith(source)( (factorial, index) => { s"time: ${System.currentTimeMillis() - start}: ${index-1}! = $factorial"} )
       .runWith(fileSink(fileName))
       .map(r => r.status)
