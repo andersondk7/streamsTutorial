@@ -29,3 +29,10 @@ Each step has a unit test to show compliance.  The accompanying project uses `or
    3. create a reusable *Sink* that takes `Any` and writes the `Any` to a file, appended with a new line
 1. Create a Unit (spec) test to demonstrate this functionality.  
 
+## Step 4 -- Demonstrate Flow Control
+This step will demonstrate that not all sources emit at the same rate, that is some sources emit data slower than other sources.
+1. Augment the class created in step 3 with:
+   1. Slow down the factorial source such that it only emits factorials at a rate of 1 per 100 milliseconds (fake that the calcualtion is a long running process)
+   1. Demonstrate this by printing the delay inserted by each calculation in the output
+   1. Don't use Thread.sleep (although you could...)
+1. Create a Unit (spec) test to demonstrate this functionality.  

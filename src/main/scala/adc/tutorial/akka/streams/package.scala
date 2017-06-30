@@ -2,11 +2,12 @@ package adc.tutorial.akka
 
 import java.nio.file.Paths
 
-import akka.stream.IOResult
+import akka.stream.{IOResult, ThrottleMode}
 import akka.stream.scaladsl.{FileIO, Flow, Keep, Sink}
 import akka.util.ByteString
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 package object streams {
   /**
@@ -32,4 +33,6 @@ package object streams {
     Flow[Any]
       .map(x => ByteString(s"$x\n"))
       .toMat(FileIO.toPath(Paths.get(filename)))(Keep.right)
+
+  def printTime(label: String): Unit = println(s"$label: ${System.currentTimeMillis()}")
 }
