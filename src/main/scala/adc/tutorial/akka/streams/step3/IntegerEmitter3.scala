@@ -68,9 +68,6 @@ class IntegerEmitter3(max: Int) {
     */
   def executeFactorialsToFile(fileName: String)(implicit materializer: Materializer): Future[Try[Done]] = {
     /**
-      * remember that source is only a template of a stream, not the actual stream
-      * this means that it can be reused to create as many streams as we need.
-      *
       * in this scenario we use the template to create 2 identical streams,
       * one that has the numbers that will be converted into factorials
       * this becomes the 'factorial' source
@@ -98,7 +95,7 @@ class IntegerEmitter3(max: Int) {
       */
     source
       .scan(BigInt(1))( (acc, next) => acc * next)
-      .zipWith(source)( (factorial, index) => s"${index-1}! = $factorial" )
+      .zipWith(Source(1 to max))( (factorial, index) => s"${index-1}! = $factorial" )
       .runWith(fileSink(fileName))
       .map(r => r.status)
   }

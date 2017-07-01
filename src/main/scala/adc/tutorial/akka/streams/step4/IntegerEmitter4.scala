@@ -19,8 +19,6 @@ class IntegerEmitter4(max: Int) {
   //
   // when the stream 'runs', it 'emits' the next element after the previous element is consumed
   //
-
-
   val source: Source[Int, NotUsed] = Source(1 to max)
 
   /**
@@ -63,7 +61,7 @@ class IntegerEmitter4(max: Int) {
         printTime("factorial")
         acc * next
       })
-      .zipWith(source)( (factorial, index) => {
+      .zipWith(Source(1 to max))( (factorial, index) => {
         printTime("zipped")
          s"${index-1}! = $factorial"
       } )

@@ -36,3 +36,14 @@ This step will demonstrate that not all sources emit at the same rate, that is s
    1. Demonstrate this by printing the delay inserted by each calculation in the output
    1. Don't use Thread.sleep (although you could...)
 1. Create a Unit (spec) test to demonstrate this functionality.  
+
+## Step 5 -- Use an actor to generate source values
+This step will replace the simple `Iterator[Int]` that was the source of the stream data with an actor that reactively pushes data into the stream based on stream consumption
+1. Augment the class created in step 3 with:
+   1. Replacing the 
+         ```scala
+         val source: Source[Int, NotUsed] = Source(1 to max)
+         ```
+      with an actor based source.
+   1. Create and actor that inserts data into the stream only when the stream is ready, that is it has consumed the last element inserted.
+1. Create a Unit (spec) test to demonstrate this functionality.  
