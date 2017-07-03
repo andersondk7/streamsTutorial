@@ -1,5 +1,6 @@
 package adc.tutorial.akka.streams.step6
 
+import adc.tutorial.akka.streams.model.Comment
 import akka.Done
 import akka.actor.ActorSystem
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Matchers}
@@ -10,7 +11,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 class CommentEmitter6Spec extends FunSpec with Matchers with BeforeAndAfterAll{
-  implicit val system = ActorSystem("IntegerEmitter")
+  implicit val system = ActorSystem("CommentEmitter6")
   implicit val ec: ExecutionContext = system.dispatcher
   private val delay = 2.seconds
 

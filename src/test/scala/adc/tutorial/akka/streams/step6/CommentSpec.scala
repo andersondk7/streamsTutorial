@@ -1,5 +1,6 @@
 package adc.tutorial.akka.streams.step6
 
+import adc.tutorial.akka.streams.model.Comment
 import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json._
 

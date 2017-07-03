@@ -1,8 +1,8 @@
-package adc.tutorial.akka.streams.step6
+package adc.tutorial.akka.streams.model
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Reads, Writes}
 import play.api.libs.json.Reads._
+import play.api.libs.json.{JsPath, Reads, Writes}
 
 case class Comment(postId: Int
                    , id: Int
