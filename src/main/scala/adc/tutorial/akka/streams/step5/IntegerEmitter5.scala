@@ -46,7 +46,7 @@ class IntegerEmitter5(max: Int) {
       * when the queue is created (as part of the materialization of the stream)....
       * give it to the actor that will place data in the queue
       */
-    futureQueue map { queue => system.actorOf(SourceActor.props(max, queue)) }
+    futureQueue map { queue => system.actorOf(SourceActor5.props(max, queue)) }
     source.runForeach(f)
   }
 
@@ -65,7 +65,7 @@ class IntegerEmitter5(max: Int) {
     implicit val ec: ExecutionContext = system.dispatcher // needed for the futures
     val (source, futureQueue) = peekMatValue(Source.queue[Int](bufferSize=max/2, overflowStrategy=OverflowStrategy.backpressure))
 
-    futureQueue map { queue => system.actorOf(SourceActor.props(max, queue)) }
+    futureQueue map { queue => system.actorOf(SourceActor5.props(max, queue)) }
     source
       .scan(BigInt(1))( (acc, next) => acc * next)
       .runForeach(f)
@@ -84,7 +84,7 @@ class IntegerEmitter5(max: Int) {
 
     val (source, futureQueue) = peekMatValue(Source.queue[Int](bufferSize=max/2, overflowStrategy=OverflowStrategy.backpressure))
 
-    futureQueue map { queue => system.actorOf(SourceActor.props(max, queue)) }
+    futureQueue map { queue => system.actorOf(SourceActor5.props(max, queue)) }
     source
       .scan(BigInt(1))( (acc, next) => acc * next)
       .zipWith(Source(1 to max))( (factorial, index) => s"${index-1}! = $factorial" )

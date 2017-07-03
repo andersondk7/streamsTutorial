@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
   * @param max number of elements to emit
   * @param queue
   */
-class SourceActor(max: Int, queue: SourceQueueWithComplete[Int]) extends Actor with ActorLogging {
+class SourceActor5(max: Int, queue: SourceQueueWithComplete[Int]) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
@@ -59,6 +59,6 @@ class SourceActor(max: Int, queue: SourceQueueWithComplete[Int]) extends Actor w
   }
 }
 
-object SourceActor {
-  def props(max: Int, queue: SourceQueueWithComplete[Int]): Props = Props(classOf[SourceActor], max, queue)
+object SourceActor5 {
+  def props(max: Int, queue: SourceQueueWithComplete[Int]): Props = Props(classOf[SourceActor5], max, queue)
 }
