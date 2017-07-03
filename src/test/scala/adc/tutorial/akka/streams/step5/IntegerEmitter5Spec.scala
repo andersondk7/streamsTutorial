@@ -13,7 +13,7 @@ import scala.util.Try
 class IntegerEmitter5Spec extends FunSpec with Matchers with BeforeAndAfterAll {
   implicit val system = ActorSystem("IntegerEmitter")
   implicit val ec: ExecutionContext = system.dispatcher
-  val delay = 2.seconds
+  private val delay = 2.seconds
 
   describe("integerEmitter") {
     val stream = new IntegerEmitter5(10)

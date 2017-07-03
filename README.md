@@ -47,3 +47,26 @@ This step will replace the simple `Iterator[Int]` that was the source of the str
       with an actor based source.
    1. Create and actor that inserts data into the stream only when the stream is ready, that is it has consumed the last element inserted.
 1. Create a Unit (spec) test to demonstrate this functionality.  
+
+## Step 6
+Rather than a simple stream of integers, build a stream of objects.  
+1. Use the following as the basis for the object
+      ```scala
+      case class Comment(postId: Int, id: Int, name: String, email: String, body: String)
+      ```
+1.  replace the ```SourceActor``` from step 5 with a ```SourceActor``` that uses a fixed sized internal list of ```Comment``` objects rather than a variable length iterator of integers.
+1.  replace the ```IntegerEmitter``` from step 5 with an ```CommentEmitter```
+   1. change ```executeWith(f: (Any) => Unit)... ``` to ```exectueWith(f: (Comment) => Unit)....`.
+   1. remove ```executeFatorialsWith```.
+   1. replace ```executeFactorialsWith(fileName: String)...``` to ```executeToFile(fileName: String)...``` where the ```Comment``` objects are written as and array of json objects in the format:
+      ```json
+         {
+            "postId": 1,
+            "id": 1,
+            "name": "id labore ex et quam laborum",
+            "email": "Eliseo@gardner.biz",
+            "body": "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
+         }
+         ```
+1. Create a Unit (spec) test to demonstrate this functionality.  
+
