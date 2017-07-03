@@ -3,10 +3,10 @@ package adc.tutorial.akka
 import java.nio.file.Paths
 
 import akka.stream.{IOResult, ThrottleMode}
-import akka.stream.scaladsl.{FileIO, Flow, Keep, Sink}
+import akka.stream.scaladsl.{FileIO, Flow, Keep, Sink, Source}
 import akka.util.ByteString
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.FiniteDuration
 
 package object streams {
@@ -35,4 +35,21 @@ package object streams {
       .toMat(FileIO.toPath(Paths.get(filename)))(Keep.right)
 
   def printTime(label: String): Unit = println(s"$label: ${System.currentTimeMillis()}")
+  /**
+    * extract the source and the future of the queue
+    *         shamelessly stolen from http://loicdescotte.github.io/posts/play-akka-streams-queue/
+    * @param src Source[T, M]
+    * @tparam T source type
+    * @tparam M materialization (what gets built) in this case a Source[T]
+    * @return tuple of the source and the Future[SourceQueue]
+    *
+    */
+  def peekMatValue[T, M](src: Source[T, M]): (Source[T, M], Future[M]) = {
+    val p = Promise[M]
+    val s = src.mapMaterializedValue { m =>
+      p.trySuccess(m)
+      m
+    }
+    (s, p.future)
+  }
 }

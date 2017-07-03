@@ -1,5 +1,6 @@
 package adc.tutorial.akka.streams.step5
 
+import adc.tutorial.akka.streams.peekMatValue
 import adc.tutorial.akka.streams.fileSink
 import akka.Done
 import akka.actor.ActorSystem
@@ -31,7 +32,7 @@ class IntegerEmitter5(max: Int) {
       * we get the source (a template that will be eventually created in the `runWith` method
       * and
       * the queue that will also be created at that time, (hence a future)
-      * from the `peekMatValue` function
+      * from the `peekMatValue` function defined in the package object `adc.tutorial.akka.streams`
       *
       * note that the size of the buffer in the queue us purposefully smaller than the number of elements that will
       * be placed in the queue, forcing back pressure on the source of the elements (our actor) to only put
@@ -94,21 +95,5 @@ class IntegerEmitter5(max: Int) {
 }
 
 object IntegerEmitter5 {
-  /**
-    * extract the source and the future of the queue
-    *         shamelessly stolen from http://loicdescotte.github.io/posts/play-akka-streams-queue/
-    * @param src Source[T, M]
-    * @tparam T source type
-    * @tparam M materialization (what gets built) in this case a Source[T]
-    * @return tuple of the source and the Future[SourceQueue]
-    *
-    */
-  def peekMatValue[T, M](src: Source[T, M]): (Source[T, M], Future[M]) = {
-    val p = Promise[M]
-    val s = src.mapMaterializedValue { m =>
-      p.trySuccess(m)
-      m
-    }
-    (s, p.future)
-  }
+
 }
