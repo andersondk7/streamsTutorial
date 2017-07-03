@@ -1,4 +1,5 @@
 package adc.tutorial.akka.streams.step6
+import adc.tutorial.akka.streams.model.Comment
 import adc.tutorial.akka.streams.step5.SourceActor5
 import adc.tutorial.akka.streams.{fileSink, peekMatValue}
 import akka.Done

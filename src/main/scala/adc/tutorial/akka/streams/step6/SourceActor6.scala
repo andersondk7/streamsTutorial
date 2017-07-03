@@ -1,7 +1,7 @@
 package adc.tutorial.akka.streams.step6
 
+import adc.tutorial.akka.streams.model.Comment
 import play.api.libs.json.Json
-
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
 import akka.stream.QueueOfferResult.{Dropped, Enqueued, Failure, QueueClosed}
