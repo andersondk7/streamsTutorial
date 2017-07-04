@@ -14,6 +14,7 @@ class SourceActor6(queue: SourceQueueWithComplete[Comment]) extends Actor with A
   import SourceActor6._
   implicit val ec: ExecutionContext = context.system.dispatcher
 
+
   override def receive: Receive = {
     val inputs = generateComments
     pipe(queue.offer(inputs.head)) to self
