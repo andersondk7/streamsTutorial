@@ -1,4 +1,4 @@
-package adc.tutorial.akka.streams.step6
+package adc.tutorial.akka.streams
 
 import adc.tutorial.akka.streams.model.Comment
 import org.scalatest.{FunSpec, Matchers}
@@ -22,6 +22,33 @@ class CommentSpec extends FunSpec with Matchers {
       json.validate[Comment] match {
         case s: JsSuccess[Comment] =>
           val comment = s.get
+          comment.postId shouldBe 1
+          comment.id shouldBe 2
+          comment.name shouldBe "id labore ex et quam laborum"
+          comment.email shouldBe "Eliseo@gardner.biz"
+          comment.body shouldBe "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
+
+        case JsError(e) => fail(s"could not parse $json because $e")
+      }
+    }
+    it ("should read one from an array of json objects") {
+      val jsString =
+        """
+          |[
+          |  {
+          |    "postId": 1,
+          |    "id": 2,
+          |    "name": "id labore ex et quam laborum",
+          |    "email": "Eliseo@gardner.biz",
+          |    "body": "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
+          |  }
+          |]
+        """.stripMargin
+      val json:JsValue = Json.parse(jsString)
+      json.validate[List[Comment]] match {
+        case s: JsSuccess[List[Comment]] =>
+          val comments: List[Comment] = s.get
+          val comment = comments.head
           comment.postId shouldBe 1
           comment.id shouldBe 2
           comment.name shouldBe "id labore ex et quam laborum"

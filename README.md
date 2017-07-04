@@ -70,3 +70,14 @@ Rather than a simple stream of integers, build a stream of objects.
          ```
 1. Create a Unit (spec) test to demonstrate this functionality.  
 
+## Step 7
+Rather than a fixed list of comments, get the comments from a web service.  This adds some delay in putting data into the stream (queue) such that the down stream processing will have to wait for the web service to provide the data to process.  (This will change as the down stream processing starts blocking and/or taking longer to process than simply writing to the console or a file)
+
+In order to separate concerns and isoloate the web interface, create a ```DataSource``` actor that is responsible for gathering data from the web and have the ```SourceActor``` communicate with this DataSource actor.  That way we have one set of messages between the ```SourceActor``` and the ```Queue``` and a different set between the ```DataSource``` and the web.  That way we can clearly see how we would change to a different web source or switch completely to a Queue (such as RabbitMQ), a postgres database query, or an amazon service such as DynamoDB.
+
+1. Create a ```DataSource``` actor to read from the web [JsonPlaceHolder](https://jsonplaceholder.typicode.com/comments)
+   - Since the web interface returns either a single comment (based on id) or all comments (500) have this class keep track which comments (based on id) have been retrieved and only return the 'next' comment.
+1. Augment the ```SourceActor``` from step 6 to get the next comment from the ```DataSource``` actor until some maximum number of comments have been retrieved.  (basically replace the ```pipe(queue.offer(...))``` with a tell to the ```DataSource``` actor and then respond to the result from the ```DataSource``` with the ```pipe(queue.offer(...))```
+1. Create a wrapper class ```CommentEmitter7```
+1. Create a Unit (spec) test to demonstrate this functionality.  
+
