@@ -16,15 +16,15 @@ class CommentEmitter7Spec extends FunSpec with Matchers with BeforeAndAfterAll{
   implicit val ec: ExecutionContext = system.dispatcher
   private val delay = 2.seconds
 
+  val stream = new CommentEmitter7(10)
+
   describe("integerEmitter") {
     it ("should print json to console") {
-      val stream = new CommentEmitter7
       val done: Future[Done] = stream.executeWith(c => println(Json.toJson[Comment](c).toString()))
       Await.result(done, delay)
       println("json printed")
     }
     it ("should print json lines to a file") {
-      val stream = new CommentEmitter7
       val done: Future[Try[Done]] = stream.executeToFile("webComments.txt")
       Await.result(done, delay)
       println("json file printed")
