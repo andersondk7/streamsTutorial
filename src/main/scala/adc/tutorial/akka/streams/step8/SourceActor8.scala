@@ -1,4 +1,5 @@
-package adc.tutorial.akka.streams.step7
+package adc.tutorial.akka.streams.step8
+
 
 import adc.tutorial.akka.streams.external.CommentMessages._
 import adc.tutorial.akka.streams.external.web.JsonWebDataSource
@@ -24,23 +25,27 @@ import scala.concurrent.ExecutionContext
   *   <br/>
   *   Any actor could be used as long as it can handle the messages defined in <tt>CommentMessages</tt>
   * </p>
+  * <p>
+  *   This source ends (dies) when there are no more messages to put in the queue (that is the max messages have been
+  *   put in the queue.
+  * </p>
   *
   * @param max maximum number of comments to consume
+  * @param preFetch number of comments to pre-fetch
   * @param queue queue that the stream will read from
   */
-class SourceActor7(max: Int, queue: SourceQueueWithComplete[Comment]) extends Actor with ActorLogging {
+class SourceActor8(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = context.system.dispatcher
   implicit val materializer = ActorMaterializer
-
   val dataSource = context.actorOf(JsonWebDataSource.props())
 
   override def receive: Receive = {
-    //
-    // delegate getting of data to the dataSource (actor), in this case it is hardcoded to a specific implementation
-    // but we could generalize by passing in a Props object of the implementation that we wanted (db, queue, amazon, etc.)
-    //
-    dataSource ! Next // start the queue going
+    // start the queue going by assuming that the queue has processed a message, so get the next one
+    dataSource ! Next
+    (2 to preFetch).foreach(_ => {
+      dataSource ! Next
+    })
     onMessage(1) // set up the processing loop
   }
 
@@ -54,13 +59,13 @@ class SourceActor7(max: Int, queue: SourceQueueWithComplete[Comment]) extends Ac
 
     case Enqueued =>
       if (processedCount < max) {
-      dataSource ! Next
-      context.become(onMessage(processedCount+1))
-    }
-    else {
-      log.info(s"processed all $max comments")
-      queue.complete()
-    }
+        dataSource ! Next
+        context.become(onMessage(processedCount+1))
+      }
+      else {
+        log.info(s"processed all $max comments")
+        queue.complete()
+      }
 
     case Dropped =>
       log.error(s"Dropped")
@@ -90,6 +95,6 @@ class SourceActor7(max: Int, queue: SourceQueueWithComplete[Comment]) extends Ac
   }
 }
 
-object SourceActor7 {
-  def props(max: Int, queue: SourceQueueWithComplete[Comment]): Props = Props(classOf[SourceActor7], max, queue)
+object SourceActor8 {
+  def props(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]): Props = Props(classOf[SourceActor8], max, preFetch, queue)
 }

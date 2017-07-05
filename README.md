@@ -81,3 +81,10 @@ In order to separate concerns and isoloate the web interface, create a ```JsonWe
 1. Create a wrapper class ```CommentEmitter7```
 1. Create a Unit (spec) test to demonstrate this functionality.  
 
+## Step 8
+So far the SourceActor has been placeing data in the queue as the downstream processed messages.  The queue size therefore has always vacillated between 1 (when first placed) and 0 (while waiting for the SourceActor to get the next data).
+
+This step will pre-load the queue so that the down stream can process pre-fectched data while the SourceActor is getting the next data to process.
+
+1. Augment the ```SourceActor``` in step 7 to pre-fectch/pre-load the queue with data (upto the maximum size of the queue) and then insert data into the queue as data is procesed.
+1. In the Unit(Spec) test, demonstrate differences in speed when pre-fetching data.

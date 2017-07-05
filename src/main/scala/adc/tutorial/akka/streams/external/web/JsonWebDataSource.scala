@@ -20,9 +20,8 @@ import scala.concurrent.ExecutionContext
   *   keeps an internal list of the comment ids to be retrieved and calls the endpoint for a specific id.  After
   *   the comment is retrieved it's id is removed from the list
   * <p>
-  * @param max
   */
-class JsonWebDataSource(max: Int) extends Actor with ActorLogging {
+class JsonWebDataSource() extends Actor with ActorLogging {
   import JsonWebDataSource._
   implicit val ec: ExecutionContext = context.system.dispatcher
   implicit val materializer = ActorMaterializer() // needed to create the standalone wsClient
@@ -33,55 +32,56 @@ class JsonWebDataSource(max: Int) extends Actor with ActorLogging {
   }
 
   override def receive: Receive = {
-    onMessage((1 to max).toList)
+    processing(0)
   }
 
   /**
     * message handler
-    * @param ids remainng ids to retrieve
     */
-  def onMessage(ids: List[Int]): Receive = {
+  def processing(currentId:Int): Receive = {
 
     // -------------------------------------------------------
     // messages from parent
     // -------------------------------------------------------
 
-    case NextComment =>
-      ids.headOption.fold[Unit]( context.parent ! NoMoreComments )
-      { nextId => pipe(wsClient.url(s"$url?id=$nextId").get) to self }
+    case Next => retrieveComment( if (currentId < maxComments) currentId+1 else 1 ) // define the nextId
 
-    case LastComment =>
-      if (ids.isEmpty)  context.parent ! NoMoreComments
-      else {
-        pipe(wsClient.url(s"$url?id=${ids.head}").get) to self
-      }
+    case Last => retrieveComment(currentId) // use the currentId
 
     // -------------------------------------------------------
     // response from web call
     // -------------------------------------------------------
 
-    case response: StandaloneWSResponse => response.status match {
-      case 200 =>
-        Json.parse(response.body).validate[List[Comment]] match {
-          case s: JsSuccess[List[Comment]] => s.get.headOption.fold(context.parent ! NoMoreComments)
-            {c => {
-              context.parent ! CommentResponse(c)
-              context.become(onMessage(ids.tail))
-            }}
-          case JsError(e) =>
-            log.error(s"could not parse result: ${response.body}")
-            context.parent ! NoMoreComments
-        }
-      case x =>
-        log.error(s"received status $x")
-        context.parent ! NoMoreComments
+    case wsResponse: StandaloneWSResponse =>
+      val response: Response = wsResponse.status match {
+          case 200 =>
+            Json.parse(wsResponse.body).validate[List[Comment]] match {
+              case s: JsSuccess[List[Comment]] => s.get.headOption.fold[Response]( Error(s"received empty list") )
+                                                                        {c => Success(c) }
+              case JsError(e) => Error(s"could not parse result: ${wsResponse.body}")
+            }
+        case x => Error(s"received status $x")
     }
+      context.parent ! response
 
+  }
+
+
+  private def retrieveComment(id: Int) = {
+    pipe(wsClient.url(s"$url?id=$id").get) to self
+    context.become(processing(id)) // update state
   }
 }
 
 object JsonWebDataSource {
+  val maxComments = 500
+//  case class InFlight(count: Int = 0) {
+//    val completed: Boolean = count < 1
+//    def more:InFlight = this.copy(count=count+1)
+//    def less:InFlight = this.copy(count=count-1)
+//  }
+
   val url = "https://jsonplaceholder.typicode.com/comments"
-  def props(max: Int) = Props(classOf[JsonWebDataSource], max)
+  def props() = Props(classOf[JsonWebDataSource])
 
 }

@@ -17,13 +17,16 @@ object CommentMessages {
   // requests for comments
   // -------------------------------------------------------
 
-  case object NextComment
-  case object LastComment
+  sealed trait Request{}
+  case object Next extends Request
+  case object Last extends Request
 
   // -------------------------------------------------------
   // responses
   // -------------------------------------------------------
-  case object NoMoreComments
-  case class CommentResponse(comment: Comment)
+
+  sealed trait Response{}
+  case class Success(comment: Comment) extends Response
+  case class Error(reason: String) extends Response
 
 }
