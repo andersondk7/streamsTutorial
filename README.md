@@ -82,9 +82,9 @@ In order to separate concerns and isoloate the web interface, create a ```JsonWe
 1. Create a Unit (spec) test to demonstrate this functionality.  
 
 ## Step 8
-So far the SourceActor has been placeing data in the queue as the downstream processed messages.  The queue size therefore has always vacillated between 1 (when first placed) and 0 (while waiting for the SourceActor to get the next data).
+So far the SourceActor has been placing data in the queue as the downstream processed comments. This means that the downstream had to wait for the SourceActor (and the call to the web service) before it could process the next comment.  
 
-This step will pre-load the queue so that the down stream can process pre-fectched data while the SourceActor is getting the next data to process.
+This step will initially load the queue to its maximum size and then fetch the next comment as the downstream finishes each comment so that the down stream can process pre-loaded comments while the SourceActor is getting the next data to process.  This should keep the queue full and keep the downstream from waiting on retrieving messages from the web service.
 
 1. Augment the ```SourceActor``` in step 7 to pre-fectch/pre-load the queue with data (upto the maximum size of the queue) and then insert data into the queue as data is procesed.
 1. In the Unit(Spec) test, demonstrate differences in speed when pre-fetching data.
