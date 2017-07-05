@@ -17,8 +17,7 @@ import scala.concurrent.ExecutionContext
   *   This actor queries the rest endpoint at <tt>https://jsonplaceholder.typicode.com/</tt> for <tt>Comment</tt> objects
   *   <br/>
   *   This endpoint can either retrieve all 500 comments or a single comment based on the comment id.  This class
-  *   keeps an internal list of the comment ids to be retrieved and calls the endpoint for a specific id.  After
-  *   the comment is retrieved it's id is removed from the list
+  *   calls based on the comment id.  It cycles through all 500 comments and then starts over at comment id 1
   * <p>
   */
 class JsonWebDataSource() extends Actor with ActorLogging {
@@ -46,7 +45,7 @@ class JsonWebDataSource() extends Actor with ActorLogging {
 
     case Next => retrieveComment( if (currentId < maxComments) currentId+1 else 1 ) // define the nextId
 
-    case Last => retrieveComment(currentId) // use the currentId
+    case Last => retrieveComment(if (currentId == 0) 1 else currentId) // use the currentId
 
     // -------------------------------------------------------
     // response from web call

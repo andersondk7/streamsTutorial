@@ -3,7 +3,7 @@ package adc.tutorial.akka.streams.step7
 import adc.tutorial.akka.streams.external.CommentMessages._
 import adc.tutorial.akka.streams.external.web.JsonWebDataSource
 import adc.tutorial.akka.streams.model.Comment
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
 import akka.stream.ActorMaterializer
 import akka.stream.QueueOfferResult.{Dropped, Enqueued, Failure, QueueClosed}
@@ -33,7 +33,7 @@ class SourceActor7(max: Int, queue: SourceQueueWithComplete[Comment]) extends Ac
   implicit val ec: ExecutionContext = context.system.dispatcher
   implicit val materializer = ActorMaterializer
 
-  val dataSource = context.actorOf(JsonWebDataSource.props())
+  private val dataSource = context.actorOf(JsonWebDataSource.props())
 
   override def receive: Receive = {
     //

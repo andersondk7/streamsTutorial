@@ -4,7 +4,7 @@ package adc.tutorial.akka.streams.step8
 import adc.tutorial.akka.streams.external.CommentMessages._
 import adc.tutorial.akka.streams.external.web.JsonWebDataSource
 import adc.tutorial.akka.streams.model.Comment
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.pipe
 import akka.stream.ActorMaterializer
 import akka.stream.QueueOfferResult.{Dropped, Enqueued, Failure, QueueClosed}
@@ -29,6 +29,10 @@ import scala.concurrent.ExecutionContext
   *   This source ends (dies) when there are no more messages to put in the queue (that is the max messages have been
   *   put in the queue.
   * </p>
+  * <p>
+  *   This is the same implementation as <tt>SourceActor7</tt> except that it pre-loads the queue
+  *   (see comments in the <tt>receive</tt> method
+  * </p>
   *
   * @param max maximum number of comments to consume
   * @param preFetch number of comments to pre-fetch
@@ -38,11 +42,12 @@ class SourceActor8(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comme
 
   implicit val ec: ExecutionContext = context.system.dispatcher
   implicit val materializer = ActorMaterializer
-  val dataSource = context.actorOf(JsonWebDataSource.props())
+  private val dataSource = context.actorOf(JsonWebDataSource.props())
 
   override def receive: Receive = {
     // start the queue going by assuming that the queue has processed a message, so get the next one
     dataSource ! Next
+    // do the pre-loading
     (2 to preFetch).foreach(_ => {
       dataSource ! Next
     })
@@ -53,6 +58,7 @@ class SourceActor8(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comme
     * Read from the datasource and push on the queue until there are no more comments in the datasource
     */
   def onMessage(processedCount: Int): Receive = {
+    /* note: This is the same implementation as SourceActor7 */
     // -------------------------------------------------------
     // messages from stream
     // -------------------------------------------------------
