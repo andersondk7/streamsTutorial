@@ -29,5 +29,13 @@ class CommentEmitter9Spec extends FunSpec with Matchers with BeforeAndAfterAll{
 
       println(s"\n\n********************\njson file printed in $duration\n")
     }
+    it ("should print json lines to the console and to a file, using futures") {
+      val start = System.currentTimeMillis()
+      val done: Future[Done] = stream.executeSequentialWithFutures("webCommentsFuture9.txt")(s => Future{println(s);s})
+      Await.result(done, delay)
+      val duration = System.currentTimeMillis() - start
+
+      println(s"\n\n********************\njson file printed in $duration\n")
+    }
   }
 }

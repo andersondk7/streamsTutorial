@@ -83,4 +83,24 @@ class CommentEmitter9(max: Int, preFetch: Int, bufferSize: Int) {
       .via(toFileFlow(fileName))
       .runWith(Sink.ignore)
   }
+
+  def executeSequentialWithFutures(fileName: String)(f: String => Future[String])(implicit system: ActorSystem): Future[Done] = {
+    implicit val materializer = ActorMaterializer() // needed to create the actor(s) in the stream
+    implicit val ec: ExecutionContext = system.dispatcher // needed for the futures
+//    implicit val parallel: Int = 1
+    // setup file (delete if exists, create new)
+    val file = new File(fileName)
+    if (file.exists()) file.delete()
+    Files.createFile(Paths.get(fileName))
+
+    val (source, futureQueue) = peekMatValue(Source.queue[Comment](bufferSize=bufferSize, overflowStrategy=OverflowStrategy.backpressure))
+    futureQueue map { queue => system.actorOf(SourceActor9.props(max=max, preFetch=preFetch, queue=queue)) }
+
+
+    source
+      .via(toJsonFlow)
+      .via(flowWithAsync(f))
+      .via(toFileFlowAsync(fileName))
+      .runWith(Sink.ignore)
+  }
 }
