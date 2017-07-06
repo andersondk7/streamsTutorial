@@ -1,10 +1,13 @@
 package adc.tutorial.akka
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
+import adc.tutorial.akka.streams.model.Comment
+import akka.NotUsed
 import akka.stream.{IOResult, ThrottleMode}
 import akka.stream.scaladsl.{FileIO, Flow, Keep, Sink, Source}
 import akka.util.ByteString
+import play.api.libs.json.Json
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.FiniteDuration
@@ -52,4 +55,23 @@ package object streams {
     }
     (s, p.future)
   }
+
+  /**
+    * Flow that converts a comment to json
+    */
+  val toJsonFlow: Flow[Comment, String, NotUsed] = Flow[Comment].map(c => Json.toJson[Comment](c).toString())
+
+  /**
+    * Flow that executes a function on each element
+    * @param f function to execute
+    */
+  def flowWith(f: String => Unit): Flow[String, String, NotUsed] = Flow[String].map(s => {f(s); s})
+
+  /**
+    * Flow that writes each element to a file (one element per line)
+    * @param fileName
+    */
+  def toFileFlow(fileName: String): Flow[String, Path, NotUsed] = Flow[String].map(s => {
+    Files.write(Paths.get(fileName), s"$s\n".getBytes(), StandardOpenOption.APPEND)
+  })
 }

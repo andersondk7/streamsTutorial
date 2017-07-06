@@ -88,3 +88,12 @@ This step will initially load the queue to its maximum size and then fetch the n
 
 1. Augment the ```SourceActor``` in step 7 to pre-fectch/pre-load the queue with data (upto the maximum size of the queue) and then insert data into the queue as data is procesed.
 1. In the Unit(Spec) test, demonstrate differences in speed when pre-fetching data.
+
+## Step 9 Working with flows
+In previous steps we have 2 methods on our ```CommentEmitter```, one that executes a function on each element and one that prints the json representation of the elements to a file.
+
+In this step we want to combine both methods into a single *RunnableGraph*  (a Runnable graph is a source -> sink representation).  We will start in this step by executing each method in sequence as a *Flow*.  The next step will explore running them concurrently.
+
+1. Add a new method to the ```SourceActor``` in step 8 that will print the json representation of the element to the console _and then_ writes the json representation to a file.  Represent each step as a *Flow* and connect the source to the first flow, then the second flow, and then to a sink (that actually does nothing)
+1. In the Unit(Spec) test, demonstrate this functionality
+

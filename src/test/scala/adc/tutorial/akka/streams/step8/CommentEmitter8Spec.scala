@@ -18,7 +18,7 @@ class CommentEmitter8Spec extends FunSpec with Matchers with BeforeAndAfterAll{
   val max = 100
   val bufferSize = 10
 
-//  describe("integerEmitter with preFetch") {
+//  describe("commentEmitter with preFetch") {
 //    val stream = new CommentEmitter8(max=max, preFetch=bufferSize, bufferSize=bufferSize)
 //    it ("should print json lines to a file") {
 //      val start = System.currentTimeMillis()
@@ -29,7 +29,7 @@ class CommentEmitter8Spec extends FunSpec with Matchers with BeforeAndAfterAll{
 //    }
 //  }
 
-  describe("integerEmitter with no preFetch") {
+  describe("commentEmitter with no preFetch") {
     val stream = new CommentEmitter8(max=max, preFetch=0, bufferSize=bufferSize)
     it ("should print json lines to a file") {
       val start = System.currentTimeMillis()
@@ -40,7 +40,7 @@ class CommentEmitter8Spec extends FunSpec with Matchers with BeforeAndAfterAll{
     }
   }
 
-  describe("integerEmitter with preFetch") {
+  describe("commentEmitter with preFetch") {
     val stream = new CommentEmitter8(max=max, preFetch=bufferSize, bufferSize=bufferSize)
     it ("should print json lines to a file") {
       val start = System.currentTimeMillis()

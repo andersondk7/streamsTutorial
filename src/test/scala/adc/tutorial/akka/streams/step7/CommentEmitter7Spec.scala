@@ -18,7 +18,7 @@ class CommentEmitter7Spec extends FunSpec with Matchers with BeforeAndAfterAll{
 
   val stream = new CommentEmitter7(10)
 
-  describe("integerEmitter") {
+  describe("commentEmitter") {
     it ("should print json to console") {
       val done: Future[Done] = stream.executeWith(c => println(Json.toJson[Comment](c).toString()))
       Await.result(done, delay)
