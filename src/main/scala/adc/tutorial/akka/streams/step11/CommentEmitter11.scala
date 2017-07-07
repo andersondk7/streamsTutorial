@@ -1,4 +1,4 @@
-package adc.tutorial.akka.streams.step10
+package adc.tutorial.akka.streams.step11
 
 
 import java.io.File
@@ -6,7 +6,7 @@ import java.nio.file.{Files, Paths}
 
 import adc.tutorial.akka.streams.model.Comment
 import adc.tutorial.akka.streams.{peekMatValue, _}
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl._
@@ -25,10 +25,10 @@ import scala.concurrent.{ExecutionContext, Future}
   * </p>
   * @param max maximum number of comments to emit per method call
   */
-class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
+class CommentEmitter11(max: Int, preFetch: Int, bufferSize: Int) {
 
-  implicit val parallel: Int = 1 //it appears that increasing this number does not make things go faster.
   import Flows._
+
 
   def executeParallel(fileName: String)(f: Comment => FlowStatus)(implicit system: ActorSystem): Future[Done] = {
     implicit val materializer = ActorMaterializer() // needed to create the actor(s) in the stream
@@ -50,7 +50,7 @@ class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
     // create the graph (remember this is a template, nothing actually gets instantiated or run at this point
     //
     //                            /-- flowWith(f) ------------\
-    //  source --> flowReport -->|                             |--> statusReportFlow --> sink (ignore)
+    //  source --> flowReport -->|                            |--> statusReportFlow --> mergeCompleteFlow --> sink (ignore)
     //                            \ -- flowToFile(fileName) --/
     //
     // -------------------------------------------------
@@ -59,13 +59,13 @@ class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
 
       // the junctions... (there are 2)
       val bcast = builder.add(Broadcast[Comment](2)) // split the input[Sting] into 2 outputs
-      val merge = builder.add(Merge[FlowStatus](2)) // merge 2 outputs[FlowStatus] into 1 input
+    val merge = builder.add(Merge[FlowStatus](2)) // merge 2 outputs[FlowStatus] into 1 input
 
       // the paths... there are 4 parts to the flow
       source ~> commentReportFlow ~> bcast // left side, up to the split
       bcast ~> flowWith(f) ~> merge  // top path
       bcast ~> flowToFile(fileName) ~> merge // bottom path
-      merge ~> statusReportFlow ~> s // right side to the end
+      merge ~> statusReportFlow ~> mergeCompleteFlow(2) ~> s // right side to the end
       ClosedShape
     }
 
@@ -95,9 +95,9 @@ class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
     // create the graph
     // create the graph (remember this is a template, nothing actually gets instantiated or run at this point
     //
-    //                            /-- flowWithAsync(f) ------------\
-    //  source --> flowReport -->|                                  |--> statusReportFlow --> sink (ignore)
-    //                            \ -- flowToFileAsync(fileName) --/
+    //                           /-- flowWithAsync(f) ------------\
+    //  source --> flowReport -->|                                |--> statusReportFlow --> mergeCompleteFlow --> sink (ignore)
+    //                           \ -- flowToFileAsync(fileName) --/
     //
     // -------------------------------------------------
     val model: Graph[ClosedShape, Future[Done]] = GraphDSL.create(Sink.ignore) { implicit builder: GraphDSL.Builder[Future[Done]] =>
@@ -105,14 +105,14 @@ class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
         import GraphDSL.Implicits._
 
         // the junctions... (there are 2)
-        val bcast = builder.add(Broadcast[Comment](2)) // split the input[Sting] into 2 outputs
-        val merge = builder.add(Merge[FlowStatus](2)) // merge 2 outputs[FlowStatus] into 1 input
+      val bcast = builder.add(Broadcast[Comment](2)) // split the input[Sting] into 2 outputs
+      val merge = builder.add(Merge[FlowStatus](2)) // merge 2 outputs[FlowStatus] into 1 input
 
         // the paths... there are 4 parts to the flow
         source ~> commentReportFlow ~> bcast // left side, up to the split
         bcast ~> flowWithAsync(f) ~> merge  // top path
         bcast ~> flowToFileAsync(fileName) ~> merge // bottom path
-        merge ~> statusReportFlow ~> s // right side to the end
+        merge ~> statusReportFlow ~> mergeCompleteFlow(2) ~> s // right side to the end
         ClosedShape
     }
 
@@ -123,3 +123,4 @@ class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
   }
 
 }
+

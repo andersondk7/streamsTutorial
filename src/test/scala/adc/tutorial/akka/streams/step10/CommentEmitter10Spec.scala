@@ -5,6 +5,7 @@ import adc.tutorial.akka.streams.SuccessfulFlow
 import akka.Done
 import akka.actor.ActorSystem
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Matchers}
+import play.api.libs.json.Json
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -24,31 +25,32 @@ class CommentEmitter10Spec extends FunSpec with Matchers with BeforeAndAfterAll{
 
       val done: Future[Done] = stream
         .executeParallel("webComments10.txt")(
-                                               s => {
-                                                       println(s)
-                                                       SuccessfulFlow("println")
+                                               c => {
+                                                       val json = Json.toJson(c)
+                                                       println(json.toString())
+                                                       SuccessfulFlow("println", c.id)
                                                      }
                                               )
       Await.result(done, delay)
       val duration = System.currentTimeMillis() - start
 
-      println(s"\n\n********************\njson file printed in $duration\n")
+      println(s"\n\n********************\ncompleted: json file in $duration\n")
     }
     it ("should print json lines to the console and to a file, using futures") {
       val start = System.currentTimeMillis()
       val done: Future[Done] = stream
         .executeParallelWithFutures("webCommentsFuture10.txt")(
-                                                                 s => {
-                                                                        Future {
-                                                                                 println(s)
-                                                                                 SuccessfulFlow("println")
-                                                                               }
-                                                                       }
+                                                                 c => Future {
+                                                                          val json = Json.toJson(c)
+                                                                          println(json.toString())
+                                                                          SuccessfulFlow("println", c.id)
+                                                                        }
+
                                                                )
       Await.result(done, delay)
       val duration = System.currentTimeMillis() - start
 
-      println(s"\n\n********************\njson file printed in $duration\n")
+      println(s"\n\n********************\ncompleted: json file (async) in $duration\n")
     }
   }
 }

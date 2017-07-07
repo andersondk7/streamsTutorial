@@ -108,7 +108,12 @@ In this step we will execute these flows in parallel and combine the results.  T
 1. Write a Unit(Spec) test that demonstrates this parallel execution.
 1. Also in the Unit(Spec) test demonstrate the speed enhancements of running the flows in parallel.
 
+## Step 11 Error Handling
 
+Now that we have flows that are somewhat self-contained, that is they do what they need to do and report success/failure, let's do something with those success/failure.
+
+1. Add a new flow that reports on the success/failure of the steps in the flow.
+1. Write a Unit(Spec) test that demonstrates this parallel execution.
 
 
 
