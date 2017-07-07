@@ -1,6 +1,6 @@
 package adc.tutorial.akka
 
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.nio.file.Paths
 
 import adc.tutorial.akka.streams.model.Comment
 import akka.NotUsed
@@ -9,10 +9,9 @@ import akka.stream.scaladsl.{FileIO, Flow, Keep, Sink, Source}
 import akka.util.ByteString
 import play.api.libs.json.Json
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 
 package object streams {
-  implicit val parallel: Int = 1 //it appears that increasing this number does not make things go faster.
   /**
     * A <tt>Sink</tt> that writes the elements received into a file, one element per line
     * @param filename where to write the result
@@ -61,21 +60,5 @@ package object streams {
     */
   val toJsonFlow: Flow[Comment, String, NotUsed] = Flow[Comment].map(c => Json.toJson[Comment](c).toString())
 
-  /**
-    * Flow that executes a function on each element
-    * @param f function to execute
-    */
-  def flowWith(f: String => Unit): Flow[String, String, NotUsed] = Flow[String].map(s => {f(s); s})
-  def flowWithAsync(f: String => Future[String])(implicit ec: ExecutionContext): Flow[String, String, NotUsed] = Flow[String].mapAsync[String](parallel)(s => f(s))
 
-  /**
-    * Flow that writes each element to a file (one element per line)
-    * @param fileName
-    */
-  def toFileFlow(fileName: String): Flow[String, Path, NotUsed] = Flow[String].map(s => {
-    Files.write(Paths.get(fileName), s"$s\n".getBytes(), StandardOpenOption.APPEND)
-  })
-  def toFileFlowAsync(fileName: String)(implicit ec: ExecutionContext): Flow[String, Path, NotUsed] = Flow[String].mapAsync[Path](parallel)(s => Future{
-    Files.write(Paths.get(fileName), s"$s\n".getBytes(), StandardOpenOption.APPEND)
-  })
 }

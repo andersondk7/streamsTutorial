@@ -1,4 +1,5 @@
-package adc.tutorial.akka.streams.step9
+package adc.tutorial.akka.streams
+
 
 import adc.tutorial.akka.streams.external.CommentMessages._
 import adc.tutorial.akka.streams.external.web.JsonWebDataSource
@@ -21,7 +22,7 @@ import scala.concurrent.ExecutionContext
   * @param preFetch number of comments to pre-fetch
   * @param queue queue that the stream will read from
   */
-class SourceActor9(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]) extends Actor with ActorLogging {
+class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = context.system.dispatcher
   implicit val materializer = ActorMaterializer
@@ -83,6 +84,7 @@ class SourceActor9(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comme
   }
 }
 
-object SourceActor9 {
-  def props(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]): Props = Props(classOf[SourceActor9], max, preFetch, queue)
+object CommentSourceActor {
+  def props(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]): Props = Props(classOf[CommentSourceActor], max, preFetch, queue)
 }
+
