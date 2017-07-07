@@ -94,9 +94,20 @@ In previous steps we have 2 methods on our ```CommentEmitter```, one that execut
 
 In this step we want to combine both methods into a single *RunnableGraph*  (a Runnable graph is a source -> sink representation).  We will start in this step by executing each method in sequence as a *Flow*.  Since the operations in the flow (namely writing to the console and writing to a file) are potentially blocking operations, include flows for blocking (not wrapped in a future) and flows that do not block (wrap the call in future)
 
-1. Add a new method to the ```SourceActor``` in step 8 that will print the json representation of the element to the console _and then_ writes the json representation to a file.  Represent each step as a *Flow* and connect the source to the first flow, then the second flow, and then to a sink (that actually does nothing)
+1. Add a new method to the ```CommentEmitter``` in step 8 that will print the json representation of the element to the console _and then_ writes the json representation to a file.  Represent each step as a *Flow* and connect the source to the first flow, then the second flow, and then to a sink (that actually does nothing)
+1. Refactor the ```SourceActor``` from step 8 to the parent package so that it can be reused in subsequent steps.
 1. In the Unit(Spec) test, demonstrate this functionality
 1. Also in the Unit(Spec) test demonstrate the speed enhancements of wrapping the blocking methods in futures.
+
+## Step 10 Parallelism (Fan-out and Fan-in)
+Based on the work done in step 9, we have two flows that could run in parallel, the ```flowWith``` and the ```flowToFile``` flows.
+
+In this step we will execute these flows in parallel and combine the results.  This will be accomplished by using *RunnableGraph*s and the *Fan-out* and *Fan-in* junctions.
+
+1. Add a new method to the ```CommentEmitter``` in step 9 that will print the json representation of the element to the console _while at the same time_ write the json representation of the comment to a file.  
+1. Write a Unit(Spec) test that demonstrates this parallel execution.
+1. Also in the Unit(Spec) test demonstrate the speed enhancements of running the flows in parallel.
+
 
 
 

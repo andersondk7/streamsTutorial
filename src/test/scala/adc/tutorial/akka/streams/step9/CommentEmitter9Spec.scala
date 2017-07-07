@@ -1,15 +1,12 @@
 package adc.tutorial.akka.streams.step9
 
 
-import adc.tutorial.akka.streams.model.Comment
 import akka.Done
 import akka.actor.ActorSystem
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Matchers}
-import play.api.libs.json.Json
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Try
 
 class CommentEmitter9Spec extends FunSpec with Matchers with BeforeAndAfterAll{
   implicit val system = ActorSystem("CommentEmitter9")
