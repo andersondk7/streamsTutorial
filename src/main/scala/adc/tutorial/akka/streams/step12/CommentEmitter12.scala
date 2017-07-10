@@ -30,6 +30,15 @@ class CommentEmitter12(max: Int, preFetch: Int, bufferSize: Int, offset:Int = 0)
   import Flows._
   import GraphDSL.Implicits._
 
+  // -------------------------------------------------
+  // the graph generally looks like: (replacing the flows with specific flow types
+  //
+  //                            /-- flowWith(f) ------------\
+  //  source --> flowReport -->|                            |--> statusReportFlow --> mergeCompleteFlow --> sink (ignore)
+  //                            \ -- flowToFile(fileName) --/
+  //
+  // -------------------------------------------------
+
   private def setupFile(fileName: String) = {
     // -------------------------------------------------
     // setup file (delete if exists, create new)
