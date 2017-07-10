@@ -110,8 +110,8 @@ class CommentEmitter10(max: Int, preFetch: Int, bufferSize: Int) {
 
         // the paths... there are 4 parts to the flow
         source ~> commentReportFlow ~> bcast // left side, up to the split
-        bcast ~> flowWithAsync(f) ~> merge  // top path
-        bcast ~> flowToFileAsync(fileName) ~> merge // bottom path
+        bcast ~> flowWithFuture(f) ~> merge  // top path
+        bcast ~> flowToFileFuture(fileName) ~> merge // bottom path
         merge ~> statusReportFlow ~> s // right side to the end
         ClosedShape
     }

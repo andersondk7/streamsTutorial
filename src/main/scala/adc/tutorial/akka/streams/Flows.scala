@@ -60,11 +60,9 @@ object Flows {
     * @param f function to execute
     */
   def flowWith(f: Comment => FlowStatus): Flow[Comment, FlowStatus, NotUsed] = Flow[Comment].map(c => {
-//    Thread.sleep(random.nextInt(30)) // added to prove that the later merge does not emit until each input has completed once only
     f(c)
   })
-  def flowWithAsync(f: Comment => Future[FlowStatus])(implicit ec: ExecutionContext): Flow[Comment, FlowStatus, NotUsed] = Flow[Comment].mapAsync[FlowStatus](parallel)(c => {
-//    Thread.sleep(random.nextInt(30)) // added to prove that the later merge does not emit until each input has completed once only
+  def flowWithFuture(f: Comment => Future[FlowStatus])(implicit ec: ExecutionContext): Flow[Comment, FlowStatus, NotUsed] = Flow[Comment].mapAsync[FlowStatus](parallel)(c => {
     f(c)
   })
 
@@ -77,7 +75,7 @@ object Flows {
     Files.write(Paths.get(fileName), s"${json.toString()}\n".getBytes(), StandardOpenOption.APPEND)
     SuccessfulFlow("flowToFile", c.id)
   })
-  def flowToFileAsync(fileName: String)(implicit ec: ExecutionContext): Flow[Comment, FlowStatus, NotUsed] = Flow[Comment].mapAsync[FlowStatus](parallel)(c => Future{
+  def flowToFileFuture(fileName: String)(implicit ec: ExecutionContext): Flow[Comment, FlowStatus, NotUsed] = Flow[Comment].mapAsync[FlowStatus](parallel)(c => Future{
     val json = Json.toJson(c)
     Files.write(Paths.get(fileName), s"${json.toString()}\n".getBytes(), StandardOpenOption.APPEND)
     SuccessfulFlow("flowToFile", c.id)
