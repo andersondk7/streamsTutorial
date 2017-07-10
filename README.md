@@ -167,13 +167,53 @@ To implement this we need a  broadcast the is able to branch based on some crite
 
 
 ## Step 14
-So far there has been an unlimited supply of comments (well, a list of 500 anyway) and the rate of comment processing has been determined by how fast a comment can be processed.
+The last several steps have been focusing on processing, that is defining the source to sink data flow.  We have delegated the specific processing at each step (flow) to a function with one of the following signatures:
+- ```scala Comment => FlowStatus```
+- ```scala Comment => Future[FlowStatus]```
+and then allowed for some mixing and matching of flows into different graphs (see steps 10 through 13)
 
-In this step rather than already having all comments, we will simulate the generation of comments and process comments as they are generated.  The general flow is:
-1. As a comment is generated it is stored in a database and the sourceActor is notified.
-1. If there is room in the stream's queue (that is processing comments is faster than generating comments), the comment is read from the database and added to the queue and processed.
-1. If there is not room in the stream's queue (that is generating comments is faster than processing comments) then the comment is ignored (meaning that it stays in the database for later processing).
-1. Once there is space in the queue, comments are retrieved from the database,
+Now we are going to concentrate on the different types of sources.
+### Source Patterns
+-  Single pass (one time through)
+    - fixed size, small memory (ie. single batch)
+    - fixed size, large memory  (ie. sub-batches)
+- Multiple pass (repeat until done)
+    - fixed size, small memory (ie. single batch)
+    - fixed size, large memory  (ie. sub-batches)
+- Dynamic size (data is added independent of processing)
+
+#### Single Pass
+If the source data source is small, say a list of integers and known when the stream is run, then storing them in a simple list is fine.  For example running a query against a database to find the data that needs to be processed, storing that result set as a List in the ```SourceActor```, and then have the ```SourceActor``` emit elements to the queue as needed by the stream.
+
+If the source data is too big to fit in memory, but still fixed a couple of options are available:
+1. _onDemand_ --have the ```SourceActor``` retrieve the data as required by the stream.  This is what the current ```SourceActor``` is doing by calling the web service for the next comment in response to the ```Enqueued``` messsage from the queue.  The disadvantage is that you have many individual requests, it is rather _chatty_.
+1. _batch mode_ -- have the ```SourceActor``` read data in batches and store the batch in memory.  When all of the data in the batch have been consumed, retrieve another batch.  This is similar to _paging_ on web sites. The disadvantage of this approach is that stream processing must wait while a new batch is retrieved, but there are fewer requests on the data source (db for example), it is less _chatty_
+
+#### Multiple Pass
+If the source data varies in response to the stream processing then the source can not retrieve more data until the current processing is done.  There are a couple of options here as well:
+1. _just-in-time_ processing.  With this approach, the source only retrieves data when *all* of the data has been processed.  This is very similar to the _batch_ approach discussed earlier.  The ```SourceActor``` gets a batch of data to process, emits them on demand from the stream, but instead of getting the next batch when the current batch has been emitted, it waits until _all_ of the emitted elements have completed.  The disadvantage of this approach is that the entire stream has to complete (that is the queue must be empty) and then wait for the next batch to be retreived.
+1. _stateful_ processing.  By adding states to the data the ```SourceActor``` can determine at query time what data to retrieve.  The states are:
+   1. _ready_ -- the data has not yet started processing. This is the initial state.
+   1. _inFlight_ -- the data is in the stream.  The ```SourceActor``` changes the data from _ready_ to _inFlight_ as part of the retrieving data process.
+   1. _completed_ -- the data has successfully been processed by the stream.  This state is set by the last flow (or the sink) in the stream upon successful completion.  If the data needs to be processed again, then this last flow (or sink) wouild set the state to _ready_.  With this approach, the source use either _onDemand_ or _batch mode_ of the _single pass_ strategies.
+
+#### Dynamic size
+When data needs to be inserted into the stream in response to external sources, for example processing comments as they happen, then the source needs to be able to handle _back pressure_ situations when the external source produces data elements faster than the stream can consume them as well as the situation when the stream processes data elements faster than the external source can produce them.
+
+One option here is to used an external queue (such as RabbitMQ) as the source.
+
+Another option is to use an actor to respond to data elements from the external source by writing to a data store (db or cassandra etc.) and then message the ```SourceActor``` that there is data to consume.  The ```SourceActor``` has 2 states, one where the stream is slower than the external source and one where the external source is slower than the stream
+1. _**fast external source, slow stream**_.  In this case the external source must wait for the stream.  When the message comes in that there is data available, it is ignored because the stream is not ready.  The ```SourceActor``` will read from the datastore as the stream is ready.
+1. _**slow external source, fast stream**_.  In this case the stream must wait on the external source. When the message comes in that there is data available, it is handled right away because the stream is waiting.
+The ```SourceActor``` toggles between these 2 states as follows:
+
+
+| State    | Message | Action |
+| ---------------- | :-------: | ------ |
+| fast source, slow stream | data available | store the data, stream queue is full |
+| fast source, slow stream | data consumed | retrieve next data from storage, if data exists then  process that data and remain in this state otherwise transition to _slow source, fast stream_ state because stream is available |
+| slow source, fast stream | data available | process the data, if the stream queue is full transition to _fast source slow stream_ |
+| slow source, fast stream | data consumed | retrieve next data from storage, if data exists then  process that data and remain in this state otherwise transition to fast source, slow stream_ state because stream is available |
 
 
 
