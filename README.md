@@ -143,12 +143,21 @@ So far all comments have followed the same branch.  In this step we will impleme
 
 The flow should look like:
 ```text
-                                                                           / -- flowA --\
-                                                          /-- split -->                  | -- flowD --\
-                                                        /                  \ -- flowB --/                  \
-                                                       /                                                       \
-  source --> flowReport --> split -->                                                         |--> sink
-                                                       \ ---------------------- flowC ----------------------/
+
+ the graph generally looks like: (replacing the flows with specific flow types)
+   the lower flow (flowC) is chosen when the postId is in the 'special' list
+   otherwise the top (FlowA/FlowB/flowD) is chosen
+
+                                                               / -- flowA --\
+                                             /-- toProcess -->               | -- flowD --\
+                                            /                  \ -- flowB --/              \
+                                           /                                                \
+                                          /     (non-specials)                               \
+   source --> flowReport --> byPostId -->    --------------------------------------------     |--> sink
+                                          \     (specials)                                   /
+                                           \                                                /
+                                            \--------------------- flowC -----------------/
+
 ```
 
 To implement this we need a  broadcast the is able to branch based on some criteria.
