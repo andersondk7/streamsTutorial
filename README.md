@@ -138,8 +138,27 @@ And we create 3 different flows that take a fileName as an argument but:
 
 Note: because of the variance in web call times, the results of the different tests are inconclusive.  This is still valuable to demonstrate the different flow techniques
 
-## Step 13 Dynamic Input
-So far there has been an inexhaustable supply of comments (well, a list of 500 anyway) and the rate of comment processing has been determined by how fast a comment can be processed.
+## Step 13 Dynamic Branch
+So far all comments have followed the same branch.  In this step we will implement a dynamic branching strategy that uses a list of 'special' quotes through a different process than the rest of the comments.
+
+The flow should look like:
+```text
+                                                                           / -- flowA --\
+                                                          /-- split -->                  | -- flowD --\
+                                                        /                  \ -- flowB --/                  \
+                                                       /                                                       \
+  source --> flowReport --> split -->                                                         |--> sink
+                                                       \ ---------------------- flowC ----------------------/
+```
+
+To implement this we need a  broadcast the is able to branch based on some criteria.
+
+
+
+
+
+## Step 14
+So far there has been an unlimited supply of comments (well, a list of 500 anyway) and the rate of comment processing has been determined by how fast a comment can be processed.
 
 In this step rather than already having all comments, we will simulate the generation of comments and process comments as they are generated.  The general flow is:
 1. As a comment is generated it is stored in a database and the sourceActor is notified.
