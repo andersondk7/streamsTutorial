@@ -22,7 +22,7 @@ import scala.concurrent.ExecutionContext
   * @param preFetch number of comments to pre-fetch
   * @param queue queue that the stream will read from
   */
-class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]) extends Actor with ActorLogging {
+class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment], offset: Int) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = context.system.dispatcher
   implicit val materializer = ActorMaterializer
@@ -32,10 +32,10 @@ class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete
     // start the queue going by assuming that the queue has processed a message, so get the next one
     dataSource ! Next
     // do the pre-loading
-    (2 to preFetch).foreach(_ => {
+    ( (offset+2) to preFetch).foreach(_ => {
       dataSource ! Next
     })
-    onMessage(1) // set up the processing loop
+    onMessage(offset+1) // set up the processing loop
   }
 
   /**
@@ -47,12 +47,11 @@ class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete
     // -------------------------------------------------------
 
     case Enqueued =>
-      if (processedCount < max) {
+      if (processedCount < max+offset) {
         dataSource ! Next
         context.become(onMessage(processedCount+1))
       }
       else {
-        log.info(s"processed all $max comments")
         queue.complete()
       }
 
@@ -85,6 +84,6 @@ class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete
 }
 
 object CommentSourceActor {
-  def props(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment]): Props = Props(classOf[CommentSourceActor], max, preFetch, queue)
+  def props(max: Int, preFetch: Int, queue: SourceQueueWithComplete[Comment], offset: Int = 0): Props = Props(classOf[CommentSourceActor], max, preFetch, queue, offset)
 }
 

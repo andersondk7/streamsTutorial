@@ -115,5 +115,37 @@ Now that we have flows that are somewhat self-contained, that is they do what th
 1. Add a new flow that reports on the success/failure of the steps in the flow.
 1. Write a Unit(Spec) test that demonstrates this parallel execution.
 
+## Step 12 Aysnc vs. Future
+Akka uses a technique called [Operator Fusion](http://doc.akka.io/docs/akka/snapshot/scala/stream/stream-flows-and-basics.html#operator-fusion).  In a nutshell, this means that all flows are executed using the same actor.
+
+In this step we will investigate the options for parallel processing:
+- futures
+- async
+
+To do this we will create 3 different flows that:
+- take the function: ```function Comment => FlowStatus``` and process each flow on the same actor
+- take the function ```function Comment => Future[FlowStatus]``` and process each flow on the same actor
+- take a simple ```function Comment => FlowStatus``` but use a different actor for each flow
+
+And we create 3 different flows that take a fileName as an argument but:
+- write directly to the file (blocking), using the same actor
+- write directly to the file (blocking) using different actors
+- write directly to the file in a future (non-blocking) using the same actor
+- write directly to the file in a future (non-blocking) using different same actors
+
+1. Add these flows.
+1. Write a Unit(Spec) test to demonstrate
+
+Note: because of the variance in web call times, the results of the different tests are inconclusive.  This is still valuable to demonstrate the different flow techniques
+
+## Step 13 Dynamic Input
+So far there has been an inexhaustable supply of comments (well, a list of 500 anyway) and the rate of comment processing has been determined by how fast a comment can be processed.
+
+In this step rather than already having all comments, we will simulate the generation of comments and process comments as they are generated.  The general flow is:
+1. As a comment is generated it is stored in a database and the sourceActor is notified.
+1. If there is room in the stream's queue (that is processing comments is faster than generating comments), the comment is read from the database and added to the queue and processed.
+1. If there is not room in the stream's queue (that is generating comments is faster than processing comments) then the comment is ignored (meaning that it stays in the database for later processing).
+1. Once there is space in the queue, comments are retrieved from the database,
+
 
 
