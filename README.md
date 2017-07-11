@@ -96,9 +96,7 @@ In this step we want to combine both methods into a single *RunnableGraph*  (a R
 
 The graph looks like:
 ```text
-                           /-- flowWith ----\
- source --> flowReport -->|                  |--> statusFlow --> sink
-                           \-- flowToFile --/
+ source -> flowReport -> flowWith -> flowToFile -> statusFlow -> sink
 ```
 
 1. Add a new method to the ```CommentEmitter``` in step 8 that will print the json representation of the element to the console _and then_ writes the json representation to a file.  Represent each step as a *Flow* and connect the source to the first flow, then the second flow, and then to a sink (that actually does nothing)
@@ -111,6 +109,11 @@ Based on the work done in step 9, we have two flows that could run in parallel, 
 
 In this step we will execute these flows in parallel and combine the results.  This will be accomplished by using *RunnableGraph*s and the *Fan-out* and *Fan-in* junctions.
 
+```text
+                           /-- flowWith ----\
+ source --> flowReport -->|                  |--> statusFlow --> sink
+                           \-- flowToFile --/
+```
 1. Add a new method to the ```CommentEmitter``` in step 9 that will print the json representation of the element to the console _while at the same time_ write the json representation of the comment to a file.  
 1. Write a Unit(Spec) test that demonstrates this parallel execution.
 1. Also in the Unit(Spec) test demonstrate the speed enhancements of running the flows in parallel.
