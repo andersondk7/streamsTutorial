@@ -14,7 +14,7 @@ import scala.util.Try
 class CommentEmitter7Spec extends FunSpec with Matchers with BeforeAndAfterAll{
   implicit val system = ActorSystem("CommentEmitter7")
   implicit val ec: ExecutionContext = system.dispatcher
-  private val delay = 2.seconds
+  private val delay = 5.seconds
 
   val stream = new CommentEmitter7(10)
 
@@ -25,7 +25,7 @@ class CommentEmitter7Spec extends FunSpec with Matchers with BeforeAndAfterAll{
       println("json printed")
     }
     it ("should print json lines to a file") {
-      val done: Future[Try[Done]] = stream.executeToFile("webComments.txt")
+      val done: Future[Try[Done]] = stream.executeToFile("webComments7.txt")
       Await.result(done, delay)
       println("json file printed")
     }

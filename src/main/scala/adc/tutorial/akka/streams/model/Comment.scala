@@ -4,6 +4,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsPath, Reads, Writes}
 
+import scala.util.Random
+
 case class Comment(postId: Int
                    , id: Int
                    , name: String
@@ -11,6 +13,7 @@ case class Comment(postId: Int
                    , body: String) { }
 
 object Comment {
+
   val postIdKey = "postId"
   val idKey = "id"
   val nameKey = "name"
@@ -31,4 +34,5 @@ object Comment {
       (JsPath \ bodyKey).write[String]
     ) (unlift(Comment.unapply))
 
+  case class Generator(postId: Int, id: Int)
 }
