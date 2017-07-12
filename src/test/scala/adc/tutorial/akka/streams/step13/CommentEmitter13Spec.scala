@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class CommentEmitter13Spec extends FunSpec with Matchers with BeforeAndAfterAll{
-  implicit val system = ActorSystem("CommentEmitter11")
+  implicit val system = ActorSystem("CommentEmitter13Spec")
   implicit val ec: ExecutionContext = system.dispatcher
   private val delay = 200.seconds
 
