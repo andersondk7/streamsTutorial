@@ -228,11 +228,22 @@ The ```SourceActor``` toggles between these 2 states as follows:
 
 
 ### Tasks
+
 In this step we are going to simulate a web page that receives comments (at random) from users.  Each received comment must be processed.  Since we can not guarentee that the rate that the comments are generated is slower than the rate the comments are processed, we will use the following pattern:
-1. Upon receipt of the comment, store it in a datastore. (for this exercise we will implement it all in memory as a simple queue.)
-1. After the comment has been stored, indicate to the CommentSource that there is a comment to be processed, and respond back that the comment has been recevied (this would be the response to the web request).
-1. Implement backpressure in a new version of of the CommentSourceActor.  This actor receives 2 messages:
-- ```CommentAvailable``` -- a comment has been posted (and stored in the datastore).  If the stream has room, query the datastore for the next comment and emit it into the stream.  If the stream is full, do nothing.  (The added comment will be processed on the next ```CommentProccessed``` message.)
-- ```CommentProcessed``` -- a comment has been processed by the stream and the stream is ready for another comment.  The actor will query the datastore for the next comment to process and if there is another comment, emit it to the stream.  If there are no comments to process, do nothing. (The next comment will be emitted to the stream when it shows up from the web page.)
+To do this simulation we need
+
+1.  A ```Reviewer``` that generates comments at varying rates
+1.  A new version of the ```CommentSource``` that implements backpressure.  This new source will:
+     1.  Upon receipt of the comment
+     1.  Store it in a datastore. (for this exercise we will implement it all in memory as a simple queue.)
+      1.  After the comment has been stored, and respond back that the comment has been recevied (this would be the response to the web request).
+      1. If the stream has room
+         1. Retrieve the comment from the data store (this is so that the data store knows what has been processed and what has not)
+         1. Emit the comment to the stream
+      1. If the stream does not have room, do nothing (this is like dropping the comment, but it was stored so it is not really lost)
+   1. Upon receipt of a comment processing completed (the stream is done with that comment), fetch the next comment from the datastore.
+      1. If there is another comment, emit it to the queue.
+      1. Otherwise, do nothing.
 1. To indicate when the process is complete, coordinate between the ```Requester``` signal when it is completed generating requests and the  ```CommentSource``` actor indicating that it has processed all requests.
+
 

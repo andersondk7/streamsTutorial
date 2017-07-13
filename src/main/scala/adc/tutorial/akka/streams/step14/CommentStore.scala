@@ -5,27 +5,31 @@ import akka.actor.{Actor, ActorLogging, Props}
 
 import scala.collection.mutable
 
-class CommentStore extends Actor with ActorLogging {
+class CommentStore(initial: List[Comment]) extends Actor with ActorLogging {
   import CommentStore._
   val queue = new mutable.Queue[Comment]()
+  queue.enqueue(initial:_*)
 
   override def receive: Receive = {
-    case Insert(comment) => queue += comment
+    case Insert(comment) =>
+      queue += comment
+      sender() ! Inserted(comment.id)
 
-    case Next =>
+    case GetNext =>
       if (queue.isEmpty) sender() ! NextComment()
       else sender() ! NextComment(Some(queue.dequeue()))
 
-    case Count => sender() ! CommentCount(queue.size)
+    case GetCount => sender() ! CommentCount(queue.size)
   }
 }
 
 object CommentStore {
-  def props() = Props(classOf[CommentStore])
+  def props(initial: List[Comment] = List()) = Props(classOf[CommentStore], initial)
   case class Insert(comment: Comment)
-  case object Next
-  case object Count
+  case object GetNext
+  case object GetCount
 
+  case class Inserted(id: Int)
   case class NextComment(comment: Option[Comment] = None)
   case class CommentCount(size: Int)
 }
