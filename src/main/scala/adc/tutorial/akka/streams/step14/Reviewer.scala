@@ -9,26 +9,33 @@ import scala.concurrent.duration._
 /**
   * This class acts as a reviewer of posts, generating comments
   */
-class Reviewer(totalComments: Int, fastDelayMs: Int, slowDelayMs: Int, partitionSize: Int) extends Actor with ActorLogging {
+class Reviewer(totalComments: Int
+               , fastDelayMs: Int
+               , slowDelayMs: Int
+               , partitionSize: Int
+               , consumer: Option[ActorRef]
+              ) extends Actor with ActorLogging {
 
   import Reviewer._
   implicit val ec: ExecutionContext = context.system.dispatcher
 
   private val generator =  context.actorOf(CommentGenerator.props(), "generator")
 
-  override def unhandled(message: Any): Unit = log.info(s"received $message from ${sender().path.name}")
+  override def unhandled(message: Any): Unit = log.warning(s"received $message from ${sender().path.name}")
 
   override def receive: Receive = {
     case Start =>
-    generator ! CommentGenerator.NextComment // get things going
-    context.become(running(totalCount=1, partitionCount=1, delayMs=fastDelayMs, sender()))
+//      log.debug(s"will send comments to ${consumer.fold("console") {_.path.toString}}")
+      generator ! CommentGenerator.NextComment // get things going
+      context.become(running(totalCount=1, partitionCount=1, delayMs=fastDelayMs, sender()))
   }
 
   def running(totalCount: Int, partitionCount: Int, delayMs: Int, requester: ActorRef): Receive = {
 
     case comment: Comment =>
       if (totalCount == totalComments) {
-        log.info(s"stopping...")
+        log.info(s"reviewer stopping after $totalCount ...")
+        consumer.foreach(c => c ! comment)
         requester ! Stopped
         context.become(stopped)
       }
@@ -38,7 +45,8 @@ class Reviewer(totalComments: Int, fastDelayMs: Int, slowDelayMs: Int, partition
           case (`partitionSize`, `slowDelayMs`) => (1, fastDelayMs)
           case (p, d) => (p+1, d)
         }
-//        log.info(s"$pCount, $delay")
+        consumer.fold[Unit]( log.info(s"$pCount, $delay") ) {c => c ! comment}
+
         context.become(running(totalCount+1, pCount, delay, requester))
         context.system.scheduler.scheduleOnce(delay.milliseconds,  generator, CommentGenerator.NextComment)
         }
@@ -46,14 +54,24 @@ class Reviewer(totalComments: Int, fastDelayMs: Int, slowDelayMs: Int, partition
 
   def stopped: Receive = {
     case comment: Comment =>
-      log.info(s" generated ${comment.id} while stopped")
+      log.debug(s" generated ${comment.id} while stopped")
       // don't process the id
       // don't get any more
   }
 }
 
 object Reviewer {
-  def props(totalComments: Int, fastDelayMs: Int, slowDelayMs: Int, partitionSize: Int) = Props(classOf[Reviewer], totalComments, fastDelayMs, slowDelayMs, partitionSize)
+  def props(totalComments: Int
+            , fastDelayMs: Int
+            , slowDelayMs: Int
+            , partitionSize: Int
+           , consumer: Option[ActorRef] = None) = Props(classOf[Reviewer]
+                                                  , totalComments
+                                                  , fastDelayMs
+                                                  , slowDelayMs
+                                                  , partitionSize
+                                                  , consumer
+                                                )
 
 
   case object Stopped

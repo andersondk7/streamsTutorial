@@ -19,6 +19,7 @@ class CommentGenerator() extends Actor with ActorLogging {
     case NextComment =>
       val name= nextName()
       val comment = Comment(postId, id, name=name, email=nextEmail(name), body=nextBody)
+      log.info(s"comment:  $comment")
       sender() ! comment
       if (commentCount == commentsPerPost) context.become(onMessage(postId+1, 1, id+1))
       else context.become(onMessage(postId, commentCount+1, id+1))

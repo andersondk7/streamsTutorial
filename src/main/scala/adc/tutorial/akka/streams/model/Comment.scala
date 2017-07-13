@@ -4,8 +4,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsPath, Reads, Writes}
 
-import scala.util.Random
-
 case class Comment(postId: Int
                    , id: Int
                    , name: String

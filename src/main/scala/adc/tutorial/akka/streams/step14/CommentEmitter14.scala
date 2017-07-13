@@ -1,6 +1,4 @@
-package adc.tutorial.akka.streams.step13
-
-
+package adc.tutorial.akka.streams.step14
 
 import adc.tutorial.akka.streams.Flows._
 import adc.tutorial.akka.streams.Graph._
@@ -13,7 +11,6 @@ import akka.stream.scaladsl._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 /**
   * Works on streams of comments
   * <p>
@@ -25,9 +22,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * </p>
   * @param max maximum number of comments to emit per method call
   */
-class CommentEmitter13(specials: List[Int], max: Int, preFetch: Int, bufferSize: Int, offset:Int = 0) {
+class CommentEmitter14(specials: List[Int], max: Int, preFetch: Int, bufferSize: Int) {
+  val propGenerator: SourceQueueWithComplete[Comment] => Props = q => CommentSource.props(max=max, inFlight=bufferSize, q)
 
-  val propGenerator: SourceQueueWithComplete[Comment] => Props = q => CommentSourceActor.props(max=max, preFetch=bufferSize, queue=q, offset=offset)
   def executeParallel(fileName: String
                       , specialFileName: String
                      )
@@ -38,8 +35,8 @@ class CommentEmitter13(specials: List[Int], max: Int, preFetch: Int, bufferSize:
     setupFile(fileName)
     setupFile(specialFileName)
 
-    val model: Graph[ClosedShape, Future[Done]] = buildModel(
-      specials
+
+    val model: Graph[ClosedShape, Future[Done]] = buildModel(specials
       , flowA=flowWith(f)
       , flowB=flowToFile(fileName)
       , flowC=flowToFile(specialFileName)
@@ -104,14 +101,22 @@ class CommentEmitter13(specials: List[Int], max: Int, preFetch: Int, bufferSize:
     setupFile(specialFileName)
     val model: Graph[ClosedShape, Future[Done]] = buildModel(
       specials
-      , flowA=flowWithFuture(f).async
-      , flowB=flowToFileFuture(fileName).async
-      , flowC=flowToFileFuture(specialFileName).async
-      , flowD=statusReportFlow.async
-      , bufferSize=bufferSize
-      , propGenerator=propGenerator
+     , flowA=flowWithFuture(f).async
+     , flowB=flowToFileFuture(fileName).async
+     , flowC=flowToFileFuture(specialFileName).async
+     , flowD=statusReportFlow.async
+     , bufferSize=bufferSize
+     , propGenerator=propGenerator
     )
     RunnableGraph.fromGraph(model).run
   }
 }
 
+object CommentEmitter14 {
+
+
+
+
+
+
+}
