@@ -202,18 +202,22 @@ object Graph {
                  , flowD: Flow[FlowStatus, FlowStatus, NotUsed]
                  , bufferSize: Int
                  , propGenerator: SourceQueueWithComplete[Comment] => Props
-                )(implicit actorSystem: ActorSystem):  Graph[ClosedShape, Future[Done]] = GraphDSL.create(Sink.ignore) { implicit builder: GraphDSL.Builder[Future[Done]] =>  s =>
-    val parts = Parts.apply(specials, builder, bufferSize, propGenerator)
+                )(implicit actorSystem: ActorSystem):  Graph[ClosedShape, Future[Done]] = {
+      GraphDSL.create(Sink.ignore) { implicit builder: GraphDSL.Builder[Future[Done]] =>  s =>
+      val parts = Parts.apply(specials, builder, bufferSize, propGenerator)
 
-    parts.source ~> commentReportFlow ~> parts.splitByPostId // left side, up to the split
-    parts.splitByPostId ~> parts.splitToProcess
-    parts.splitToProcess ~> flowA ~> parts.mergeFromProcess  // top path
-    parts.splitToProcess ~> flowB ~> parts.mergeFromProcess // bottom path
-    parts.mergeFromProcess ~> flowD ~> parts.mergePostId
-    parts.splitByPostId ~> flowC ~> parts.mergePostId
-    parts.mergePostId ~> s // right side to the end
+      parts.source ~> commentReportFlow ~> parts.splitByPostId // left side, up to the split
+      parts.splitByPostId ~> parts.splitToProcess
+        parts.splitToProcess ~> flowA ~> parts.mergeFromProcess  // top path
+        parts.splitToProcess ~> flowB ~> parts.mergeFromProcess // bottom path
+          parts.mergeFromProcess ~> flowD ~> parts.mergePostId
 
-    ClosedShape
+      parts.splitByPostId ~> flowC ~> parts.mergePostId
+
+      parts.mergePostId ~> s // right side to the end
+
+      ClosedShape
+    }
   }
 }
 
