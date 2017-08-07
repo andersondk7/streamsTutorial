@@ -60,7 +60,6 @@ class TransformSpec extends FunSpec with Matchers {
 
     it("should also count words in the body of comments") {
 
-
       val stream = source.via(bodyOnlyFlow).via(wordCountFlow).toMat(sink)(Keep.right)
       val result = Await.result(stream.run, 2 seconds)
 
@@ -71,8 +70,7 @@ class TransformSpec extends FunSpec with Matchers {
     it("should build and run a stream from a graph") {
 
       val simpleGraph: Graph[ClosedShape, Future[Int]] = {
-        GraphDSL.create(sink) { implicit builder: GraphDSL.Builder[Future[Int]] =>
-          s =>
+        GraphDSL.create(sink) { implicit builder: GraphDSL.Builder[Future[Int]] => s =>
             source ~> bodyOnlyFlow ~> wordCountFlow ~> s
             ClosedShape
         }
