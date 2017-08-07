@@ -41,11 +41,11 @@ class TransformSpec extends FunSpec with Matchers {
     it ("should count words in the body of comments") {
 
       // flows.. the functions
-      // Sink .. (the sum method)
+      // Sink .. (folding over the results)
       // the stream
       // source -> flow -> flow -> sink
       // comments -> body -> count -> sum
-      val result: Int = comments.map(bodyOnly(_)).map(wordCount(_)).sum
+      val result: Int = comments.map(bodyOnly(_)).map(wordCount(_)).fold(0)(_ + _)
 
       result shouldBe 45
 
@@ -53,12 +53,13 @@ class TransformSpec extends FunSpec with Matchers {
   }
 
   describe("an akka stream") {
+    val source: Source[Comment, NotUsed] = Source(comments)
+    val bodyOnlyFlow: Flow[Comment, String, NotUsed] = Flow[Comment].map(bodyOnly(_))
+    val wordCountFlow: Flow[String, Int, NotUsed] = Flow[String].map(wordCount(_))
+    val sink: Sink[Int, Future[Int]] = Sink.fold[Int, Int](0)(_ + _)
+
     it("should also count words in the body of comments") {
 
-      val source: Source[Comment, NotUsed] = Source(comments)
-      val bodyOnlyFlow: Flow[Comment, String, NotUsed] = Flow[Comment].map(bodyOnly(_))
-      val wordCountFlow: Flow[String, Int, NotUsed] = Flow[String].map(wordCount(_))
-      val sink: Sink[Int, Future[Int]] = Sink.fold[Int, Int](0)(_ + _)
 
       val stream = source.via(bodyOnlyFlow).via(wordCountFlow).toMat(sink)(Keep.right)
       val result = Await.result(stream.run, 2 seconds)
@@ -66,19 +67,14 @@ class TransformSpec extends FunSpec with Matchers {
       result shouldBe 45
 
     }
-  }
 
-  describe("an akka graph") {
     it("should build and run a stream from a graph") {
-      val source: Source[Comment, NotUsed] = Source(comments)
-      val bodyOnlyFlow: Flow[Comment, String, NotUsed] = Flow[Comment].map(bodyOnly(_))
-      val wordCountFlow: Flow[String, Int, NotUsed] = Flow[String].map(wordCount(_))
-      val sink: Sink[Int, Future[Int]] = Sink.fold[Int, Int](0)(_ + _)
 
-      val simpleGraph:  Graph[ClosedShape, Future[Int]] = {
-        GraphDSL.create(sink) { implicit builder: GraphDSL.Builder[Future[Int]] => s =>
-          source ~> bodyOnlyFlow ~> wordCountFlow ~> s
-          ClosedShape
+      val simpleGraph: Graph[ClosedShape, Future[Int]] = {
+        GraphDSL.create(sink) { implicit builder: GraphDSL.Builder[Future[Int]] =>
+          s =>
+            source ~> bodyOnlyFlow ~> wordCountFlow ~> s
+            ClosedShape
         }
       }
       val stream = RunnableGraph.fromGraph(simpleGraph).run
