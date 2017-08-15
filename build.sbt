@@ -1,3 +1,4 @@
+
 name := "streamsTutorial"
 
 version := "1.0"
@@ -23,5 +24,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % playJsonVersion,
   "com.typesafe.play" % "play-ws-standalone_2.12" % playWsVersion,
   "com.typesafe.play" % "play-ahc-ws-standalone_2.12" % playWsVersion,
-  "com.typesafe.play" % "play-ws-standalone-json_2.12" % playWsVersion
+  "com.typesafe.play" % "play-ws-standalone-json_2.12" % playWsVersion,
+  "com.typesafe.play" %% "play-ws-standalone-xml" % "1.0.1",
+  "com.sksamuel.elastic4s" %% "elastic4s-core" % "5.4.10",
+  "com.sksamuel.elastic4s" %% "elastic4s-http" % "5.4.10"
 )

@@ -23,7 +23,7 @@ class CommentSpec extends FunSpec with Matchers {
         case s: JsSuccess[Comment] =>
           val comment = s.get
           comment.postId shouldBe 1
-          comment.id shouldBe 2
+          comment.index shouldBe 2
           comment.name shouldBe "id labore ex et quam laborum"
           comment.email shouldBe "Eliseo@gardner.biz"
           comment.body shouldBe "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
@@ -50,7 +50,7 @@ class CommentSpec extends FunSpec with Matchers {
           val comments: List[Comment] = s.get
           val comment = comments.head
           comment.postId shouldBe 1
-          comment.id shouldBe 2
+          comment.index shouldBe 2
           comment.name shouldBe "id labore ex et quam laborum"
           comment.email shouldBe "Eliseo@gardner.biz"
           comment.body shouldBe "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"

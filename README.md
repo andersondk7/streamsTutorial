@@ -173,9 +173,6 @@ The flow should look like:
 To implement this we need a  broadcast the is able to branch based on some criteria.
 
 
-
-
-
 ## Step 14
 The last several steps have been focusing on processing, that is defining the source to sink data flow.  We have delegated the specific processing at each step (flow) to a function with one of the following signatures:
 - ```scala Comment => FlowStatus```
@@ -246,4 +243,60 @@ To do this simulation we need
       1. Otherwise, do nothing.
 1. To indicate when the process is complete, coordinate between the ```Requester``` signal when it is completed generating requests and the  ```CommentSource``` actor indicating that it has processed all requests.
 
+
+## Step 15
+So far we have not needed any external services (database, etc.) to implement our streams. In this step we are going to start integrating some external services.  We will start with using ElasticSearch as a sink of data.  We will use the [Elastic4s](https://github.com/sksamuel/elastic4s) library to interface with ElasticSearch.
+
+To illustrate how to create ```Sink``` objects we will create a sink based on an actor and have that actor use the ```httpClient``` provided by _Elastic4s_.  
+
+There are 4 messages that represent communication between the stream and the sink:  (you define the messages and give them to akka)
+1. ```Init``` this is sent from the stream to the actor when the stream is created
+1. ```data``` this is the element in the stream that is sent to the sink.  This is the ```In``` type defined in the sink.
+1. ```Ack``` this is sent from the actor to the stream when communication has been acknowledged.  This must be sent when:
+   1. the ```Init``` is recieved and the actor is ready to receive emitted elements.
+   1. the emitted ```data``` element has been processed and the actor is ready to receive the next element.
+1. ```Complete``` this is sent from the stream to the actor when there are no more elements to consume, i.e. when the stream is complete.
+
+Because elastic search is *significantly* more performant when items are indexed in bulk, have the actor buffer recevied elements and only call elasticsearch when the buffer is full.  This leads to 2 states:
+1. _Processing data from the stream_.  In this state the elements are simply pushed into the actor's internal queue.
+1. _Waiting on Elastic Search_.  We transition to this state when the internal queue is full and make the bulk index call to elasticsearch.  Upon completion of that call, we transition back to the _Processing_ state.
+
+The additional issues to be aware of in this implemetation is handling the ```Complete``` message from the stream.  This message will come before all of the elements have been indexed into elastic search and can come in either state:
+1. _Processing_ --  If there are elements in the internal queue waiting to be indexed they need to be indexed when the ```Complete``` messages comes.
+1. _Waiting_ -- we need to wait until the response from elastic search before stopping the actor.
+
+### Setup
+1. install a local instance of elastic search by following the instructions at [ElasticSearch Install](https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html)
+1. create an index in your elastic search installation to hold ```comments```
+   ```
+      curl -XPUT 'localhost:9200/comments?pretty' -H 'Content-Type: application/json' -d'
+      {                 
+          "settings" : {
+              "index" : {
+                  "number_of_shards" : 5, 
+                  "number_of_replicas" : 1 
+              }
+          }
+      }
+      '
+   
+   ```
+
+### Tasks
+Create a class that will retrieve comments from the web endpoint and index them into elastic search.
+1. Update the ```Comment``` case class so that it can be read and written to elastic search using the ```elastic4s``` library
+    1. add implicit conversions from ```SearchHit``` and ```Option[SearchHit]```
+    1. create an implicit object that extends ```com.sksamuel.elastic4s.Indexable[Comment]```.
+1. Create an Actor (```BulkIndexerActor```) that will become the sink for indexing objects into elasticsearch.
+    1. make this Actor index any element that implements the trait:
+        ```
+        trait Indexable {
+           def index(): String
+        }
+        ```
+1. use this new sink in folowing flow:
+    ```text
+        source --> report --> sink --> sink
+    ```
+1. wrap the graph in a ```CommentEmitter15``` that has a single method: ``` index(count: Int): Future[Int] ``` that will retreive ```count``` comments and insert them into elastic search.
 
