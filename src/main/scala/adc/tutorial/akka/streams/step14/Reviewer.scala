@@ -54,7 +54,7 @@ class Reviewer(totalComments: Int
 
   def stopped: Receive = {
     case comment: Comment =>
-      log.debug(s" generated ${comment.id} while stopped")
+      log.debug(s" generated ${comment.index} while stopped")
       // don't process the id
       // don't get any more
   }

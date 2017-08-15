@@ -2,13 +2,18 @@ package adc.tutorial.akka.streams.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsPath, Reads, Writes}
+import play.api.libs.json.{JsPath, Json, Reads, Writes}
+import com.sksamuel.elastic4s.http.search.SearchHit
+import com.sksamuel.elastic4s.{Indexable => ESIndexable}
+import scala.language.implicitConversions
 
 case class Comment(postId: Int
                    , id: Int
                    , name: String
                    , email: String
-                   , body: String) { }
+                   , body: String) extends Indexable{
+  override val index:String = id.toString
+}
 
 object Comment {
 
@@ -33,4 +38,14 @@ object Comment {
     ) (unlift(Comment.unapply))
 
   case class Generator(postId: Int, id: Int)
+
+  //---------------------------------------------------
+  // needed for elastic search interoperation
+  //---------------------------------------------------
+  implicit def fromSearchHit(sh: SearchHit): Comment = Json.parse(sh.sourceAsString).as[Comment]
+  implicit def fromSearchHitOption(sho: Option[SearchHit]): Option[Comment] = sho.map[Comment](c => c)
+  implicit object CommentElasticSearchIndex extends ESIndexable[Comment] {
+    override def json(c: Comment): String = Json.toJson[Comment](c).toString()
+  }
+
 }

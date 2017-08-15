@@ -52,6 +52,7 @@ class CommentSourceActor(max: Int, preFetch: Int, queue: SourceQueueWithComplete
         context.become(onMessage(processedCount+1))
       }
       else {
+        log.info(s"processed ${max+offset}, queue is complete ")
         queue.complete()
       }
 
